@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
@@ -22,15 +23,19 @@ public class FileBrowserGUI extends JFrame {
     private File currentDirectory;
 
     public FileBrowserGUI() {
-        setTitle("File Browser");
+        setTitle("FTP Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 400);
+        setSize(600, 400);
+
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
+        setContentPane(contentPane);
 
         listModel = new DefaultListModel<>();
         fileList = new JList<>(listModel);
 
         JScrollPane scrollPane = new JScrollPane(fileList);
-        add(scrollPane, BorderLayout.CENTER);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
 
         backButton = new JButton(getIcon("arrow_left.png"));
         backButton.setEnabled(false);
@@ -57,7 +62,46 @@ public class FileBrowserGUI extends JFrame {
         buttonPanel.add(backButton, BorderLayout.WEST);
         buttonPanel.add(selectedFileLabel, BorderLayout.CENTER);
         buttonPanel.add(forwardButton, BorderLayout.EAST);
-        add(buttonPanel, BorderLayout.NORTH);
+        contentPane.add(buttonPanel, BorderLayout.NORTH);
+
+        // Create the buttons section
+        JPanel buttonsSection = new JPanel();
+        buttonsSection.setLayout(new GridLayout(3, 1));
+
+        JButton button1 = new JButton("Button 1");
+        button1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Define the functionality for Button 1
+                // Add your custom code here
+                JOptionPane.showMessageDialog(null, "Button 1 clicked");
+            }
+        });
+        buttonsSection.add(button1);
+
+        JButton button2 = new JButton("Button 2");
+        button2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Define the functionality for Button 2
+                // Add your custom code here
+                JOptionPane.showMessageDialog(null, "Button 2 clicked");
+            }
+        });
+        buttonsSection.add(button2);
+
+        JButton button3 = new JButton("Button 3");
+        button3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Define the functionality for Button 3
+                // Add your custom code here
+                JOptionPane.showMessageDialog(null, "Button 3 clicked");
+            }
+        });
+        buttonsSection.add(button3);
+
+        contentPane.add(buttonsSection, BorderLayout.EAST);
 
         fileList.addMouseListener(new MouseAdapter() {
             @Override
@@ -66,7 +110,7 @@ public class FileBrowserGUI extends JFrame {
                     int selectedIndex = fileList.getSelectedIndex();
                     if (selectedIndex != -1) {
                         String selectedFile = listModel.getElementAt(selectedIndex);
-                        File file = new File(selectedFile);
+                        File file = new File(currentDirectory, selectedFile);
                         if (file.isDirectory()) {
                             navigateToDirectory(file);
                         }
@@ -74,6 +118,7 @@ public class FileBrowserGUI extends JFrame {
                 }
             }
         });
+
 
         fileList.addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -83,13 +128,14 @@ public class FileBrowserGUI extends JFrame {
                     if (selectedIndex != -1) {
                         String selectedFile = listModel.getElementAt(selectedIndex);
                         File file = new File(selectedFile);
-                        selectedFileLabel.setText(file.getName());
+                        selectedFileLabel.setText(currentDirectory.getPath()+"\\"+file.getName());
                     } else {
                         selectedFileLabel.setText("");
                     }
                 }
             }
         });
+
 
 
         backStack = new Stack<>();
@@ -118,6 +164,7 @@ public class FileBrowserGUI extends JFrame {
 
         updateFileList(directory);
         currentDirectory = directory;
+        selectedFileLabel.setText(currentDirectory.getPath());
     }
 
     private void navigateBack() {
@@ -133,6 +180,8 @@ public class FileBrowserGUI extends JFrame {
                 backButton.setEnabled(false);
             }
         }
+        selectedFileLabel.setText(currentDirectory.getPath()+"\\");
+
     }
 
     private void navigateForward() {
@@ -148,6 +197,8 @@ public class FileBrowserGUI extends JFrame {
                 forwardButton.setEnabled(false);
             }
         }
+        selectedFileLabel.setText(currentDirectory.getPath()+"\\");
+
     }
 
     private void updateFileList(File directory) {
@@ -155,7 +206,11 @@ public class FileBrowserGUI extends JFrame {
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
-                listModel.addElement(file.getAbsolutePath());
+                if(file.isDirectory()){
+                    listModel.addElement(file.getName()+"\\");
+                }else {
+                    listModel.addElement(file.getName());
+                }
             }
         }
     }
