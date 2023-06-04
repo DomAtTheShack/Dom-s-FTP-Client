@@ -5,7 +5,7 @@ import java.io.IOException;
 
 public class FTPClientJ {
 
-    public static void main(String[] args) {
+    public static void FTPClient(String sendFile, String RemoteDir, Boolean send) {
         String server = "192.168.5.118";
         int port = 21;
         String username = "dominichann";
@@ -21,8 +21,6 @@ public class FTPClientJ {
 
             if (loggedIn) {
                 System.out.println("Logged in to FTP server.");
-
-                //ftpClient.enterLocalPassiveMode();
                 ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
 
                 File localFile = new File(localFilePath);

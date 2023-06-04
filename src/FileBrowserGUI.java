@@ -17,6 +17,7 @@ public class FileBrowserGUI extends JFrame {
     private JLabel selectedFileLabel;
     private JButton backButton;
     private JButton forwardButton;
+    private JProgressBar loadingBar; // Added loading bar component
 
     private Stack<File> backStack;
     private Stack<File> forwardStack;
@@ -64,16 +65,13 @@ public class FileBrowserGUI extends JFrame {
         buttonPanel.add(forwardButton, BorderLayout.EAST);
         contentPane.add(buttonPanel, BorderLayout.NORTH);
 
-        // Create the buttons section
         JPanel buttonsSection = new JPanel();
-        buttonsSection.setLayout(new GridLayout(3, 1));
+        buttonsSection.setLayout(new GridLayout(4, 1)); // Changed to 4 rows
 
         JButton button1 = new JButton("Button 1");
         button1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Define the functionality for Button 1
-                // Add your custom code here
                 JOptionPane.showMessageDialog(null, "Button 1 clicked");
             }
         });
@@ -83,8 +81,6 @@ public class FileBrowserGUI extends JFrame {
         button2.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Define the functionality for Button 2
-                // Add your custom code here
                 JOptionPane.showMessageDialog(null, "Button 2 clicked");
             }
         });
@@ -94,14 +90,16 @@ public class FileBrowserGUI extends JFrame {
         button3.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Define the functionality for Button 3
-                // Add your custom code here
                 JOptionPane.showMessageDialog(null, "Button 3 clicked");
             }
         });
         buttonsSection.add(button3);
 
-        contentPane.add(buttonsSection, BorderLayout.EAST);
+        loadingBar = new JProgressBar();
+        loadingBar.setStringPainted(true); // Display the percentage
+        buttonsSection.add(loadingBar); // Added loading bar to the layout
+
+        contentPane.add(buttonsSection, BorderLayout.EAST); // Aligned buttons section to the right
 
         fileList.addMouseListener(new MouseAdapter() {
             @Override
@@ -119,7 +117,6 @@ public class FileBrowserGUI extends JFrame {
             }
         });
 
-
         fileList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -127,16 +124,14 @@ public class FileBrowserGUI extends JFrame {
                     int selectedIndex = fileList.getSelectedIndex();
                     if (selectedIndex != -1) {
                         String selectedFile = listModel.getElementAt(selectedIndex);
-                        File file = new File(selectedFile);
-                        selectedFileLabel.setText(currentDirectory.getPath()+"\\"+file.getName());
+                        File file = new File(currentDirectory, selectedFile);
+                        selectedFileLabel.setText(file.getAbsolutePath());
                     } else {
                         selectedFileLabel.setText("");
                     }
                 }
             }
         });
-
-
 
         backStack = new Stack<>();
         forwardStack = new Stack<>();
@@ -164,7 +159,7 @@ public class FileBrowserGUI extends JFrame {
 
         updateFileList(directory);
         currentDirectory = directory;
-        selectedFileLabel.setText(currentDirectory.getPath());
+        selectedFileLabel.setText(currentDirectory.getAbsolutePath());
     }
 
     private void navigateBack() {
@@ -172,33 +167,43 @@ public class FileBrowserGUI extends JFrame {
             forwardStack.push(currentDirectory);
             forwardButton.setEnabled(true);
 
-            File directory = backStack.pop();
-            updateFileList(directory);
-            currentDirectory = directory;
+            currentDirectory = backStack.pop();
+            updateFileList(currentDirectory);
 
             if (backStack.isEmpty()) {
                 backButton.setEnabled(false);
             }
-        }
-        selectedFileLabel.setText(currentDirectory.getPath()+"\\");
+        } else {
+            // Navigate to the parent directory
+            File parentDirectory = currentDirectory.getParentFile();
+            if (parentDirectory != null) {
+                forwardStack.push(currentDirectory);
+                forwardButton.setEnabled(true);
 
+                currentDirectory = parentDirectory;
+                updateFileList(currentDirectory);
+
+                backButton.setEnabled(true);
+            }
+        }
+
+        selectedFileLabel.setText(currentDirectory.getAbsolutePath());
     }
+
 
     private void navigateForward() {
         if (!forwardStack.isEmpty()) {
             backStack.push(currentDirectory);
             backButton.setEnabled(true);
 
-            File directory = forwardStack.pop();
-            updateFileList(directory);
-            currentDirectory = directory;
+            currentDirectory = forwardStack.pop();
+            updateFileList(currentDirectory);
 
             if (forwardStack.isEmpty()) {
                 forwardButton.setEnabled(false);
             }
         }
-        selectedFileLabel.setText(currentDirectory.getPath()+"\\");
-
+        selectedFileLabel.setText(currentDirectory.getAbsolutePath());
     }
 
     private void updateFileList(File directory) {
@@ -206,9 +211,9 @@ public class FileBrowserGUI extends JFrame {
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
-                if(file.isDirectory()){
-                    listModel.addElement(file.getName()+"\\");
-                }else {
+                if (file.isDirectory()) {
+                    listModel.addElement(file.getName() + File.separator);
+                } else {
                     listModel.addElement(file.getName());
                 }
             }
