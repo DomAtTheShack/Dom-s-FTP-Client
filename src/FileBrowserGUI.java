@@ -72,7 +72,9 @@ public class FileBrowserGUI extends JFrame {
         button1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null, "Button 1 clicked");
+                if(FTPClientJ.FTPUpFile("C:\\Users\\dooli\\Downloads\\FileBrowserGUI.java","/home/dominichann/")) {
+                    JOptionPane.showMessageDialog(null, "Sent!");
+                }
             }
         });
         buttonsSection.add(button1);
@@ -173,6 +175,7 @@ public class FileBrowserGUI extends JFrame {
             if (backStack.isEmpty()) {
                 backButton.setEnabled(false);
             }
+
         } else {
             // Navigate to the parent directory
             File parentDirectory = currentDirectory.getParentFile();
@@ -227,12 +230,11 @@ public class FileBrowserGUI extends JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new FileBrowserGUI();
-            }
-        });
+    }
+    public void setLoadingBar(int x){
+        loadingBar.setValue(x);
+    }
+    public void setLoadingBarText(String str){
+        loadingBar.setString(str);
     }
 }
