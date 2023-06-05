@@ -18,19 +18,7 @@ public class FTPClientJ {
             return false;
         }
     }
-    public static boolean connect(String server,String user, String pass,int port){
-        return true;
-    }
-    public static boolean FTPUpFile(String sendFile, String remoteDir) {
-        String server = "domserver.xyz";
-        int port = 21;
-        String username = "dominichann";
-        String password = "Hidom@123";
-        String localFilePath = "C:\\Users\\dooli\\Downloads\\FileBrowserGUI.java";
-        String remoteFilePath = "/home/dominichann/";
-
-        FileInputStream fileInputStream = null;
-
+    public static boolean connect(String server,String user, String pass,int port) throws IOException {
         try {
             ftpClient.connect(server, port);
             int replyCode = ftpClient.getReplyCode();
@@ -38,17 +26,33 @@ public class FTPClientJ {
                 Main.loadingBar.addConsoleText("FTP server refused connection.");
                 return false;
             }
-
-            boolean loggedIn = ftpClient.login(username, password);
+            boolean loggedIn = ftpClient.login(user, pass);
             if (!loggedIn) {
-                System.out.println("Could not log in to the FTP server.");
+                Main.loadingBar.addConsoleText("Could not log in to the FTP server.");
                 return false;
             }
+            return true;
+        }catch (Exception e){
+            Main.loadingBar.addConsoleText(e.toString());
+            return false;
+        }
+    }
+    public static void disconnect() throws IOException {
+        try {
+            ftpClient.disconnect();
+        }catch(Exception e){
+            Main.loadingBar.addConsoleText(e.toString());
+        }
+    }
+    public static boolean FTPUpFile(String sendFile, String remoteDir) {
 
+        FileInputStream fileInputStream = null;
+
+        try {
             ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
           //  ftpClient.enterLocalPassiveMode();
 
-            File localFile = new File(localFilePath);
+            File localFile = new File(sendFile);
             long fileSize = localFile.length();
             fileInputStream = new FileInputStream(localFile);
             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
@@ -58,7 +62,7 @@ public class FTPClientJ {
             long totalBytesUploaded = 0;
 
             while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
-                ftpClient.storeFile(remoteFilePath, bufferedInputStream);
+                ftpClient.storeFile(remoteDir, bufferedInputStream);
                 totalBytesUploaded += bytesRead;
 
                 int percentComplete = (int) ((totalBytesUploaded * 100) / fileSize);

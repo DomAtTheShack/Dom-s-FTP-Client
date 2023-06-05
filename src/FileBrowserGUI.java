@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 
 public class FileBrowserGUI extends JFrame {
     private JList<String> fileList;
@@ -39,12 +40,12 @@ public class FileBrowserGUI extends JFrame {
         JScrollPane scrollPane = new JScrollPane(fileList);
         contentPane.add(scrollPane, BorderLayout.CENTER);
 
-        console = new JTextArea(5, 10); // Create console component
+        console = new JTextArea(5, 5); // Create console component
         console.setEditable(false);
         selectedFileLabel = new JLabel();
         selectedFileLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         JPanel topPanel = new JPanel(new BorderLayout()); // Create a top panel for console
-        topPanel.setPreferredSize(new Dimension(10, 300)); // Set preferred size for the top panel
+        topPanel.setPreferredSize(new Dimension(10, 120)); // Set preferred size for the top panel
         console = new JTextArea(5, 10); // Create console component
         console.setEditable(false);
         JScrollPane consoleScrollPane = new JScrollPane(console);
@@ -86,6 +87,7 @@ public class FileBrowserGUI extends JFrame {
         inputPanel.add(textField3);
         inputPanel.add(label4);
         inputPanel.add(textField4);
+        textField4.setText("21");
 
         inputPanel.add(connectPanel); // Add connectPanel to inputPanel
 
@@ -168,14 +170,34 @@ public class FileBrowserGUI extends JFrame {
         connectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                    addConsoleText("Fuck java");
+                try {
+                    if(textField1.getText().equals("")||(textField4.getText()).equals("")){
+                        addConsoleText("Invalid Server Info Input");
+                    }else {
+                        if(FTPClientJ.connect(textField1.getText(), textField2.getText(), textField3.getText(), Integer.parseInt(textField4.getText()))){
+                            addConsoleText("Connected!");
+                            connectButton.setEnabled(false);
+                            disconnectButton.setEnabled(true);
+                        }else{
+                            addConsoleText("Unable to Connect");
+                        }
+                    }
+                    } catch (IOException ex) {
+                    addConsoleText(ex.toString());
+                }
             }
         });
 
         disconnectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-               // disconnectFromServer();
+                try {
+                    FTPClientJ.disconnect();
+                    connectButton.setEnabled(true);
+                    disconnectButton.setEnabled(false);
+                } catch (IOException ex) {
+                    addConsoleText(ex.toString());
+                }
             }
         });
 

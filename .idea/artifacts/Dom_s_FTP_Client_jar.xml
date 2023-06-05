@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Dom-s-FTP-Client:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Dom_s_FTP_Client_jar</output-path>
+    <root id="archive" name="Dom-s-FTP-Client.jar">
+      <element id="module-output" name="Dom-s-FTP-Client" />
+      <element id="library" level="project" name="commons-net-3.9.0" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/JarLibs/commons-net-3.9.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
