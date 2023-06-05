@@ -117,12 +117,17 @@ public class FileBrowserGUI extends JFrame {
         fileList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getSource() == fileList && e.getClickCount() == 2) {
+                if (e.getClickCount() == 2) {
                     int selectedIndex = fileList.getSelectedIndex();
                     if (selectedIndex != -1) {
                         String selectedFile = listModel.getElementAt(selectedIndex);
                         File file = new File(currentDirectory, selectedFile);
-                        if (file.isDirectory()) {
+                        if (selectedFile.equals("..")) {
+                            File parentDirectory = currentDirectory.getParentFile();
+                            if (parentDirectory != null) {
+                                navigateToDirectory(parentDirectory);
+                            }
+                        } else if (file.isDirectory()) {
                             navigateToDirectory(file);
                         }
                     }
@@ -137,8 +142,7 @@ public class FileBrowserGUI extends JFrame {
                     int selectedIndex = fileList.getSelectedIndex();
                     if (selectedIndex != -1) {
                         String selectedFile = listModel.getElementAt(selectedIndex);
-                        File file = new File(currentDirectory, selectedFile);
-                        selectedFileLabel.setText(file.getAbsolutePath());
+                        selectedFileLabel.setText(currentDirectory.getAbsolutePath() + File.separator + selectedFile);
                     } else {
                         selectedFileLabel.setText("");
                     }
@@ -146,15 +150,25 @@ public class FileBrowserGUI extends JFrame {
             }
         });
 
+
+
+
         navigateToDirectory(new File(System.getProperty("user.home")));
         selectedFileLabel.setText(currentDirectory.getPath());
         setVisible(true);
     }
 
     private void navigateToDirectory(File directory) {
-        updateFileList(directory);
-        currentDirectory = directory;
-        selectedFileLabel.setText(currentDirectory.getAbsolutePath());
+        if (directory != null) {
+            updateFileList(directory);
+            currentDirectory = directory;
+
+            if (currentDirectory.getParentFile() != null) {
+                selectedFileLabel.setText(currentDirectory.getAbsolutePath());
+            } else {
+                selectedFileLabel.setText("");
+            }
+        }
     }
 
     private void updateFileList(File directory) {
@@ -173,6 +187,7 @@ public class FileBrowserGUI extends JFrame {
             }
         }
     }
+
 
     public void setLoadingBar(int x) {
         loadingBar.setValue(x);
