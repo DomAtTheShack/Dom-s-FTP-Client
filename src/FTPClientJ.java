@@ -23,17 +23,17 @@ public class FTPClientJ {
             ftpClient.connect(server, port);
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
-                Main.loadingBar.addConsoleText("FTP server refused connection.");
+                Main.gui.addConsoleText("FTP server refused connection.");
                 return false;
             }
             boolean loggedIn = ftpClient.login(user, pass);
             if (!loggedIn) {
-                Main.loadingBar.addConsoleText("Could not log in to the FTP server.");
+                Main.gui.addConsoleText("Could not log in to the FTP server.");
                 return false;
             }
             return true;
         }catch (Exception e){
-            Main.loadingBar.addConsoleText(e.toString());
+            Main.gui.addConsoleText(e.toString());
             return false;
         }
     }
@@ -41,7 +41,7 @@ public class FTPClientJ {
         try {
             ftpClient.disconnect();
         }catch(Exception e){
-            Main.loadingBar.addConsoleText(e.toString());
+            Main.gui.addConsoleText(e.toString());
         }
     }
     public static boolean FTPUpFile(String sendFile, String remoteDir) {
@@ -66,9 +66,9 @@ public class FTPClientJ {
                 totalBytesUploaded += bytesRead;
 
                 int percentComplete = (int) ((totalBytesUploaded * 100) / fileSize);
-                Main.loadingBar.setLoadingBar(percentComplete);
+                Main.gui.setLoadingBar(percentComplete);
             }
-            Main.loadingBar.setLoadingBarText("Done!");
+            Main.gui.setLoadingBarText("Done!");
 
             bufferedInputStream.close();
             fileInputStream.close();
@@ -78,7 +78,7 @@ public class FTPClientJ {
             System.out.println("File upload completed successfully.");
             return true;
         } catch (Exception e) {
-            Main.loadingBar.addConsoleText(e.toString());
+            Main.gui.addConsoleText(e.toString());
         } finally {
             try {
                 if (fileInputStream != null) {

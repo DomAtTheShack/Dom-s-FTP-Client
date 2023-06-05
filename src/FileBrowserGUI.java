@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class FileBrowserGUI extends JFrame {
     private JList<String> fileList;
@@ -17,7 +18,7 @@ public class FileBrowserGUI extends JFrame {
     private JProgressBar loadingBar;
     private JTextField textField1;
     private JTextField textField2;
-    private JTextField textField3;
+    private JPasswordField textField3;
     private JTextField textField4;
     private JTextArea console;
 
@@ -75,7 +76,7 @@ public class FileBrowserGUI extends JFrame {
         JLabel label2 = new JLabel("Username");
         textField2 = new JTextField(20);
         JLabel label3 = new JLabel("Password");
-        textField3 = new JTextField(20);
+        textField3 = new JPasswordField(20);
         JLabel label4 = new JLabel("Port");
         textField4 = new JTextField(5);
 
@@ -171,10 +172,11 @@ public class FileBrowserGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
+                    String pass = new String(textField3.getPassword());
                     if(textField1.getText().equals("")||(textField4.getText()).equals("")){
                         addConsoleText("Invalid Server Info Input");
                     }else {
-                        if(FTPClientJ.connect(textField1.getText(), textField2.getText(), textField3.getText(), Integer.parseInt(textField4.getText()))){
+                        if(FTPClientJ.connect(textField1.getText(), textField2.getText(), pass, Integer.parseInt(textField4.getText()))){
                             addConsoleText("Connected!");
                             connectButton.setEnabled(false);
                             disconnectButton.setEnabled(true);
@@ -195,6 +197,7 @@ public class FileBrowserGUI extends JFrame {
                     FTPClientJ.disconnect();
                     connectButton.setEnabled(true);
                     disconnectButton.setEnabled(false);
+                    addConsoleText("Disconnected!");
                 } catch (IOException ex) {
                     addConsoleText(ex.toString());
                 }
@@ -211,7 +214,17 @@ public class FileBrowserGUI extends JFrame {
         button2.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-              //  performButton2Action();
+                ((DefaultListModel<String>) ftpDirectoryList.getModel()).clear();
+                File[] files = currentDirectory.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        if (file.isFile()) {
+                            ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName());
+                        }else {
+                            ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName()+ File.separator);
+                        }
+                    }
+                }
             }
         });
 

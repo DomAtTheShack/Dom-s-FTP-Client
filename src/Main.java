@@ -2,10 +2,10 @@
 import javax.swing.*;
 
 public class Main {
-    public static FileBrowserGUI loadingBar;
+    public static FileBrowserGUI gui;
 
     static {
-        loadingBar = new FileBrowserGUI();
+        gui = new FileBrowserGUI();
     }
 
     public static void main(String[] args){
