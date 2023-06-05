@@ -22,7 +22,7 @@ public class FTPClientJ {
         return true;
     }
     public static boolean FTPUpFile(String sendFile, String remoteDir) {
-        String server = "192.168.5.118";
+        String server = "domserver.xyz";
         int port = 21;
         String username = "dominichann";
         String password = "Hidom@123";
@@ -35,7 +35,7 @@ public class FTPClientJ {
             ftpClient.connect(server, port);
             int replyCode = ftpClient.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
-                System.out.println("FTP server refused connection.");
+                Main.loadingBar.addConsoleText("FTP server refused connection.");
                 return false;
             }
 
@@ -73,8 +73,8 @@ public class FTPClientJ {
 
             System.out.println("File upload completed successfully.");
             return true;
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Main.loadingBar.addConsoleText(e.toString());
         } finally {
             try {
                 if (fileInputStream != null) {

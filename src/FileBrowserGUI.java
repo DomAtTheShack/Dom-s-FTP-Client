@@ -8,9 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.net.URL;
-import java.util.Stack;
-import org.apache.commons.net.ftp.FTPClient;
 
 public class FileBrowserGUI extends JFrame {
     private JList<String> fileList;
@@ -21,7 +18,7 @@ public class FileBrowserGUI extends JFrame {
     private JTextField textField2;
     private JTextField textField3;
     private JTextField textField4;
-    private JTextArea console; // Added console component
+    private JTextArea console;
 
     private File currentDirectory;
 
@@ -29,6 +26,8 @@ public class FileBrowserGUI extends JFrame {
         setTitle("FTP Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
+        Image icon = Toolkit.getDefaultToolkit().getImage("/icons/ftp.png");
+        setIconImage(icon);
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.setBorder(new EmptyBorder(10, 20, 20, 20));
@@ -40,13 +39,19 @@ public class FileBrowserGUI extends JFrame {
         JScrollPane scrollPane = new JScrollPane(fileList);
         contentPane.add(scrollPane, BorderLayout.CENTER);
 
-
+        console = new JTextArea(5, 10); // Create console component
+        console.setEditable(false);
         selectedFileLabel = new JLabel();
         selectedFileLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        JPanel topPanel = new JPanel(new BorderLayout()); // Create a top panel for console
+        topPanel.setPreferredSize(new Dimension(10, 300)); // Set preferred size for the top panel
+        console = new JTextArea(5, 10); // Create console component
+        console.setEditable(false);
+        JScrollPane consoleScrollPane = new JScrollPane(console);
+        topPanel.add(consoleScrollPane, BorderLayout.SOUTH); // Add console to the top panel
+        topPanel.add(selectedFileLabel,BorderLayout.PAGE_START);
 
-        JPanel buttonPanel = new JPanel(new BorderLayout());
-        buttonPanel.add(selectedFileLabel, BorderLayout.CENTER);
-        contentPane.add(buttonPanel, BorderLayout.NORTH);
+        contentPane.add(topPanel, BorderLayout.NORTH); // Add top panel to the north region
 
         JPanel connectPanel = new JPanel(); // Panel for connect and disconnect buttons
         connectPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -60,7 +65,6 @@ public class FileBrowserGUI extends JFrame {
 
         connectPanel.add(connectButton);
         connectPanel.add(disconnectButton);
-        //setVisible(true);
 
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.X_AXIS));
@@ -87,9 +91,7 @@ public class FileBrowserGUI extends JFrame {
 
         contentPane.add(inputPanel, BorderLayout.SOUTH);
 
-        console = new JTextArea(5, 10); // Create console component
-        console.setEditable(false);
-        JScrollPane consoleScrollPane = new JScrollPane(console);
+
         JPanel rightPanel = new JPanel(new BorderLayout()); // Panel for the right side components
 
         JPanel buttonsPanel = new JPanel(new GridLayout(1, 3)); // Panel for buttons
@@ -101,18 +103,28 @@ public class FileBrowserGUI extends JFrame {
         buttonsPanel.add(button2);
         buttonsPanel.add(button1);
 
+        JPanel directoryPanel = new JPanel(); // Panel for FTP directory
+        directoryPanel.setLayout(new BoxLayout(directoryPanel, BoxLayout.Y_AXIS));
+
+        JLabel directoryLabel = new JLabel("FTP Directory");
+        directoryLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        JList<String> ftpDirectoryList = new JList<>(new DefaultListModel<>());
+        JScrollPane ftpDirectoryScrollPane = new JScrollPane(ftpDirectoryList);
+
+        directoryPanel.add(directoryLabel);
+        directoryPanel.add(ftpDirectoryScrollPane);
+
         JPanel spacePanel = new JPanel(); // Panel for white space
         spacePanel.setPreferredSize(new Dimension(10, 50)); // Adjust the preferred height as needed
 
         loadingBar = new JProgressBar();
         loadingBar.setStringPainted(true);
 
-        rightPanel.add(consoleScrollPane, BorderLayout.CENTER); // Add console to the center
         rightPanel.add(buttonsPanel, BorderLayout.PAGE_START); // Add buttons to the center
+        rightPanel.add(directoryPanel, BorderLayout.LINE_START); // Add directory panel to the left
         rightPanel.add(loadingBar, BorderLayout.PAGE_END); // Add loading bar to the bottom
 
-        contentPane.add(rightPanel, BorderLayout.EAST);
-
+        contentPane.add(rightPanel, BorderLayout.EAST); // Add right panel to the center
 
         fileList.addMouseListener(new MouseAdapter() {
             @Override
@@ -150,12 +162,43 @@ public class FileBrowserGUI extends JFrame {
             }
         });
 
-
-
-
         navigateToDirectory(new File(System.getProperty("user.home")));
         selectedFileLabel.setText(currentDirectory.getPath());
         setVisible(true);
+        connectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                    addConsoleText("Fuck java");
+            }
+        });
+
+        disconnectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               // disconnectFromServer();
+            }
+        });
+
+        button1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FTPClientJ.FTPUpFile("/","/");
+            }
+        });
+
+        button2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              //  performButton2Action();
+            }
+        });
+
+        button3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              //  performButton3Action();
+            }
+        });
     }
 
     private void navigateToDirectory(File directory) {
@@ -188,12 +231,14 @@ public class FileBrowserGUI extends JFrame {
         }
     }
 
-
     public void setLoadingBar(int x) {
         loadingBar.setValue(x);
     }
 
     public void setLoadingBarText(String str) {
         loadingBar.setString(str);
+    }
+    public void addConsoleText(String text) {
+        console.append(text + "\n");
     }
 }
