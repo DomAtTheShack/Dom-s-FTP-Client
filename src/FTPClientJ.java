@@ -8,6 +8,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class FTPClientJ {
+    private static FTPClient ftpClient = new FTPClient();
+
+
+    public static boolean isConnected(){
+        if(ftpClient.isConnected()){
+            return true;
+        }else {
+            return false;
+        }
+    }
+    public static boolean connect(String server,String user, String pass,int port){
+        return true;
+    }
     public static boolean FTPUpFile(String sendFile, String remoteDir) {
         String server = "192.168.5.118";
         int port = 21;
@@ -16,7 +29,6 @@ public class FTPClientJ {
         String localFilePath = "C:\\Users\\dooli\\Downloads\\FileBrowserGUI.java";
         String remoteFilePath = "/home/dominichann/";
 
-        FTPClient ftpClient = new FTPClient();
         FileInputStream fileInputStream = null;
 
         try {

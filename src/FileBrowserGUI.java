@@ -10,26 +10,28 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.Stack;
+import org.apache.commons.net.ftp.FTPClient;
 
 public class FileBrowserGUI extends JFrame {
     private JList<String> fileList;
     private DefaultListModel<String> listModel;
     private JLabel selectedFileLabel;
-    private JButton backButton;
-    private JButton forwardButton;
-    private JProgressBar loadingBar; // Added loading bar component
+    private JProgressBar loadingBar;
+    private JTextField textField1;
+    private JTextField textField2;
+    private JTextField textField3;
+    private JTextField textField4;
+    private JTextArea console; // Added console component
 
-    private Stack<File> backStack;
-    private Stack<File> forwardStack;
     private File currentDirectory;
 
     public FileBrowserGUI() {
         setTitle("FTP Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 400);
+        setSize(1200, 800);
 
         JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
+        contentPane.setBorder(new EmptyBorder(10, 20, 20, 20));
         setContentPane(contentPane);
 
         listModel = new DefaultListModel<>();
@@ -38,70 +40,79 @@ public class FileBrowserGUI extends JFrame {
         JScrollPane scrollPane = new JScrollPane(fileList);
         contentPane.add(scrollPane, BorderLayout.CENTER);
 
-        backButton = new JButton(getIcon("arrow_left.png"));
-        backButton.setEnabled(false);
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                navigateBack();
-            }
-        });
-
-        forwardButton = new JButton(getIcon("arrow_right.png"));
-        forwardButton.setEnabled(false);
-        forwardButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                navigateForward();
-            }
-        });
 
         selectedFileLabel = new JLabel();
         selectedFileLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
         JPanel buttonPanel = new JPanel(new BorderLayout());
-        buttonPanel.add(backButton, BorderLayout.WEST);
         buttonPanel.add(selectedFileLabel, BorderLayout.CENTER);
-        buttonPanel.add(forwardButton, BorderLayout.EAST);
         contentPane.add(buttonPanel, BorderLayout.NORTH);
 
-        JPanel buttonsSection = new JPanel();
-        buttonsSection.setLayout(new GridLayout(4, 1)); // Changed to 4 rows
+        JPanel connectPanel = new JPanel(); // Panel for connect and disconnect buttons
+        connectPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JButton connectButton = new JButton("Connect");
+        JButton disconnectButton = new JButton("Disconnect");
+        disconnectButton.setEnabled(false);
+        disconnectButton.setOpaque(true); // Ensure button is opaque
+        disconnectButton.setBackground(UIManager.getColor("Button.background")); // Set background color to default
+        disconnectButton.setForeground(UIManager.getColor("Button.foreground")); // Set text color to default
+        disconnectButton.setBorderPainted(true); // Show button border
 
+        connectPanel.add(connectButton);
+        connectPanel.add(disconnectButton);
+        //setVisible(true);
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.X_AXIS));
+
+        JLabel label1 = new JLabel("Server IP");
+        textField1 = new JTextField(10);
+        JLabel label2 = new JLabel("Username");
+        textField2 = new JTextField(20);
+        JLabel label3 = new JLabel("Password");
+        textField3 = new JTextField(20);
+        JLabel label4 = new JLabel("Port");
+        textField4 = new JTextField(5);
+
+        inputPanel.add(label1);
+        inputPanel.add(textField1);
+        inputPanel.add(label2);
+        inputPanel.add(textField2);
+        inputPanel.add(label3);
+        inputPanel.add(textField3);
+        inputPanel.add(label4);
+        inputPanel.add(textField4);
+
+        inputPanel.add(connectPanel); // Add connectPanel to inputPanel
+
+        contentPane.add(inputPanel, BorderLayout.SOUTH);
+
+        console = new JTextArea(5, 10); // Create console component
+        console.setEditable(false);
+        JScrollPane consoleScrollPane = new JScrollPane(console);
+        JPanel rightPanel = new JPanel(new BorderLayout()); // Panel for the right side components
+
+        JPanel buttonsPanel = new JPanel(new GridLayout(1, 3)); // Panel for buttons
         JButton button1 = new JButton("Button 1");
-        button1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(FTPClientJ.FTPUpFile("C:\\Users\\dooli\\Downloads\\FileBrowserGUI.java","/home/dominichann/")) {
-                    JOptionPane.showMessageDialog(null, "Sent!");
-                }
-            }
-        });
-        buttonsSection.add(button1);
-
         JButton button2 = new JButton("Button 2");
-        button2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null, "Button 2 clicked");
-            }
-        });
-        buttonsSection.add(button2);
-
         JButton button3 = new JButton("Button 3");
-        button3.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null, "Button 3 clicked");
-            }
-        });
-        buttonsSection.add(button3);
+
+        buttonsPanel.add(button3);
+        buttonsPanel.add(button2);
+        buttonsPanel.add(button1);
+
+        JPanel spacePanel = new JPanel(); // Panel for white space
+        spacePanel.setPreferredSize(new Dimension(10, 50)); // Adjust the preferred height as needed
 
         loadingBar = new JProgressBar();
-        loadingBar.setStringPainted(true); // Display the percentage
-        buttonsSection.add(loadingBar); // Added loading bar to the layout
+        loadingBar.setStringPainted(true);
 
-        contentPane.add(buttonsSection, BorderLayout.EAST); // Aligned buttons section to the right
+        rightPanel.add(consoleScrollPane, BorderLayout.CENTER); // Add console to the center
+        rightPanel.add(buttonsPanel, BorderLayout.PAGE_START); // Add buttons to the center
+        rightPanel.add(loadingBar, BorderLayout.PAGE_END); // Add loading bar to the bottom
+
+        contentPane.add(rightPanel, BorderLayout.EAST);
+
 
         fileList.addMouseListener(new MouseAdapter() {
             @Override
@@ -135,82 +146,22 @@ public class FileBrowserGUI extends JFrame {
             }
         });
 
-        backStack = new Stack<>();
-        forwardStack = new Stack<>();
         navigateToDirectory(new File(System.getProperty("user.home")));
-
+        selectedFileLabel.setText(currentDirectory.getPath());
         setVisible(true);
     }
 
-    private ImageIcon getIcon(String filename) {
-        URL iconURL = getClass().getResource("icons/" + filename);
-        if (iconURL != null) {
-            return new ImageIcon(iconURL);
-        } else {
-            System.err.println("Icon not found: " + filename);
-            return null;
-        }
-    }
-
     private void navigateToDirectory(File directory) {
-        if (currentDirectory != null) {
-            backStack.push(currentDirectory);
-            backButton.setEnabled(true);
-        }
-        forwardButton.setEnabled(false);
-
         updateFileList(directory);
         currentDirectory = directory;
         selectedFileLabel.setText(currentDirectory.getAbsolutePath());
     }
 
-    private void navigateBack() {
-        if (!backStack.isEmpty()) {
-            forwardStack.push(currentDirectory);
-            forwardButton.setEnabled(true);
-
-            currentDirectory = backStack.pop();
-            updateFileList(currentDirectory);
-
-            if (backStack.isEmpty()) {
-                backButton.setEnabled(false);
-            }
-
-        } else {
-            // Navigate to the parent directory
-            File parentDirectory = currentDirectory.getParentFile();
-            if (parentDirectory != null) {
-                forwardStack.push(currentDirectory);
-                forwardButton.setEnabled(true);
-
-                currentDirectory = parentDirectory;
-                updateFileList(currentDirectory);
-
-                backButton.setEnabled(true);
-            }
-        }
-
-        selectedFileLabel.setText(currentDirectory.getAbsolutePath());
-    }
-
-
-    private void navigateForward() {
-        if (!forwardStack.isEmpty()) {
-            backStack.push(currentDirectory);
-            backButton.setEnabled(true);
-
-            currentDirectory = forwardStack.pop();
-            updateFileList(currentDirectory);
-
-            if (forwardStack.isEmpty()) {
-                forwardButton.setEnabled(false);
-            }
-        }
-        selectedFileLabel.setText(currentDirectory.getAbsolutePath());
-    }
-
     private void updateFileList(File directory) {
         listModel.clear();
+        if (directory.getParentFile() != null) {
+            listModel.addElement("..");
+        }
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -223,18 +174,11 @@ public class FileBrowserGUI extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        // Set native look and feel for better integration with the operating system
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    public void setLoadingBar(int x){
+    public void setLoadingBar(int x) {
         loadingBar.setValue(x);
     }
-    public void setLoadingBarText(String str){
+
+    public void setLoadingBarText(String str) {
         loadingBar.setString(str);
     }
 }
