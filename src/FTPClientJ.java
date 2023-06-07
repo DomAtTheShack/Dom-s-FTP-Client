@@ -2,10 +2,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTP;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 
 public class FTPClientJ {
     private static FTPClient ftpClient = new FTPClient();
@@ -44,59 +41,52 @@ public class FTPClientJ {
             Main.gui.addConsoleText(e.toString());
         }
     }
-    public static boolean FTPUpFile(String sendFile, String remoteDir, boolean error ) {
+    public static boolean FTPUpFile(String sendFile, String remoteDir ) {
 
-        FileInputStream fileInputStream = null;
-
+        FileInputStream inputStream = null;
         try {
-            if(!ftpClient.isConnected()){
-                Main.gui.addConsoleText("Not Connected");
+            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+            ftpClient.enterLocalPassiveMode();
+            File localFile = new File(sendFile);
+            inputStream = new FileInputStream(localFile);
+
+            String remoteFileName = localFile.getName();
+
+            // Upload the file to the server
+            OutputStream outputStream = ftpClient.storeFileStream(remoteFileName);
+            byte[] buffer = new byte[4096];
+            long fileSize = localFile.length();
+            long uploadedBytes = 0;
+            int bytesRead;
+            int percentCompleted = 0;
+
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+                uploadedBytes += bytesRead;
+                int newPercentCompleted = (int) ((uploadedBytes * 100) / fileSize);
+                if (newPercentCompleted > percentCompleted) {
+                    percentCompleted = newPercentCompleted;
+                    System.out.println(percentCompleted);
+                    Main.gui.setLoadingBar(percentCompleted);
+                }
+            }
+
+            inputStream.close();
+            outputStream.close();
+
+            boolean completed = ftpClient.completePendingCommand();
+            if (completed) {
+                Main.gui.addConsoleText("File uploaded successfully.");
+                return true;
+            } else {
+                Main.gui.addConsoleText("Failed to upload the file.");
                 return false;
             }
-            ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
-            ftpClient.enterLocalPassiveMode();
-
-            File localFile = new File(sendFile);
-            long fileSize = localFile.length();
-            fileInputStream = new FileInputStream(localFile);
-                        BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            long totalBytesUploaded = 0;
-            while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
-                ftpClient.storeFile(remoteDir, bufferedInputStream);
-                Main.gui.addConsoleText(ftpClient.getReplyString());
-
-                totalBytesUploaded += bytesRead;
-
-                int percentComplete = (int) ((totalBytesUploaded * 100) / fileSize);
-                Main.gui.setLoadingBar(percentComplete);
-            }
-            Main.gui.setLoadingBarText("Done!");
-
-            bufferedInputStream.close();
-            fileInputStream.close();
-
-            System.out.println("File upload completed successfully.");
-            return true;
-        } catch (Exception e) {
-            Main.gui.addConsoleText(e.toString());
-        } finally {
-            try {
-                if (fileInputStream != null) {
-                    fileInputStream.close();
-                }
-                if (ftpClient.isConnected()) {
-                    ftpClient.logout();
-                    ftpClient.disconnect();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+        } catch (Exception ex) {
+            Main.gui.addConsoleText("Error: " + ex.getMessage());
+                return false;
             }
         }
-        return false;
-    }
         public static void FTPUpFolder(String[] args) {
             String server = "ftp.example.com";
             int port = 21;

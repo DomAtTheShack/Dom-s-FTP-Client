@@ -98,8 +98,8 @@ public class FileBrowserGUI extends JFrame {
         JPanel rightPanel = new JPanel(new BorderLayout()); // Panel for the right side components
 
         JPanel buttonsPanel = new JPanel(new GridLayout(1, 3)); // Panel for buttons
-        JButton button1 = new JButton("Button 1");
-        JButton button2 = new JButton("Button 2");
+        JButton button1 = new JButton("Send File/Folder");
+        JButton button2 = new JButton("Receive File/Folder");
         JButton button3 = new JButton("Button 3");
 
         buttonsPanel.add(button3);
@@ -116,9 +116,6 @@ public class FileBrowserGUI extends JFrame {
 
         directoryPanel.add(directoryLabel);
         directoryPanel.add(ftpDirectoryScrollPane);
-
-        JPanel spacePanel = new JPanel(); // Panel for white space
-        spacePanel.setPreferredSize(new Dimension(10, 50)); // Adjust the preferred height as needed
 
         loadingBar = new JProgressBar();
         loadingBar.setStringPainted(true);
@@ -207,7 +204,27 @@ public class FileBrowserGUI extends JFrame {
         button1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FTPClientJ.FTPUpFile("/home/dominic/Downloads/Human Nature.mp3","Human.mp3",false);
+                setLoadingBar(0);
+                int selectedFileIndex = fileList.getSelectedIndex();
+                if(selectedFileIndex==-1){
+                    addConsoleText("No File Selected");
+                    return;
+                }
+                File[] files = currentDirectory.listFiles();
+                String selectedFile = listModel.getElementAt(selectedFileIndex);
+                File file = new File(currentDirectory, selectedFile);
+                if(file.isDirectory()&&selectedFileIndex!=0){
+                    //FTPClientJ.FTPUpFolder();
+                }else if(selectedFileIndex!=0){
+                    FTPClientJ.FTPUpFile(file.getAbsolutePath(), selectedFile);
+                }else {
+
+                }
+                if(!FTPClientJ.isConnected()){
+                    connectButton.setEnabled(true);
+                    disconnectButton.setEnabled(false);
+                    addConsoleText("Disconnected from "+ textField1.getText());
+                }
             }
         });
 
@@ -231,7 +248,7 @@ public class FileBrowserGUI extends JFrame {
         button3.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-              //  performButton3Action();
+              System.out.println(FTPClientJ.isConnected());
             }
         });
     }
