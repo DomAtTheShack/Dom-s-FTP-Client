@@ -207,7 +207,7 @@ public class FileBrowserGUI extends JFrame {
         button1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FTPClientJ.FTPUpFile("/","/");
+                FTPClientJ.FTPUpFile("/home/dominic/Downloads/Human Nature.mp3","Human.mp3",false);
             }
         });
 

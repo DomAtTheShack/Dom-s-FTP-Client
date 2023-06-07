@@ -44,25 +44,30 @@ public class FTPClientJ {
             Main.gui.addConsoleText(e.toString());
         }
     }
-    public static boolean FTPUpFile(String sendFile, String remoteDir) {
+    public static boolean FTPUpFile(String sendFile, String remoteDir, boolean error ) {
 
         FileInputStream fileInputStream = null;
 
         try {
+            if(!ftpClient.isConnected()){
+                Main.gui.addConsoleText("Not Connected");
+                return false;
+            }
             ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
-          //  ftpClient.enterLocalPassiveMode();
+            ftpClient.enterLocalPassiveMode();
 
             File localFile = new File(sendFile);
             long fileSize = localFile.length();
             fileInputStream = new FileInputStream(localFile);
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+                        BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
 
             byte[] buffer = new byte[1024];
             int bytesRead;
             long totalBytesUploaded = 0;
-
             while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
                 ftpClient.storeFile(remoteDir, bufferedInputStream);
+                Main.gui.addConsoleText(ftpClient.getReplyString());
+
                 totalBytesUploaded += bytesRead;
 
                 int percentComplete = (int) ((totalBytesUploaded * 100) / fileSize);
@@ -72,8 +77,6 @@ public class FTPClientJ {
 
             bufferedInputStream.close();
             fileInputStream.close();
-            ftpClient.logout();
-            ftpClient.disconnect();
 
             System.out.println("File upload completed successfully.");
             return true;
