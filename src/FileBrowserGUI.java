@@ -1,3 +1,6 @@
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPFile;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -21,6 +24,11 @@ public class FileBrowserGUI extends JFrame {
     private JPasswordField textField3;
     private JTextField textField4;
     public JTextArea console;
+
+    private JList<String> ftpDirectoryList;
+
+    private DefaultListModel<String> FTPListModel;
+
 
     private File currentDirectory;
 
@@ -93,6 +101,8 @@ public class FileBrowserGUI extends JFrame {
         inputPanel.add(connectPanel); // Add connectPanel to inputPanel
 
         contentPane.add(inputPanel, BorderLayout.SOUTH);
+        FTPListModel = new DefaultListModel<>();
+        ftpDirectoryList = new JList<>(FTPListModel);
 
 
         JPanel rightPanel = new JPanel(new BorderLayout()); // Panel for the right side components
@@ -111,7 +121,7 @@ public class FileBrowserGUI extends JFrame {
 
         JLabel directoryLabel = new JLabel("FTP Directory");
         directoryLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-        JList<String> ftpDirectoryList = new JList<>(new DefaultListModel<>());
+        ftpDirectoryList = new JList<>(new DefaultListModel<>());
         JScrollPane ftpDirectoryScrollPane = new JScrollPane(ftpDirectoryList);
 
         directoryPanel.add(directoryLabel);
@@ -147,17 +157,14 @@ public class FileBrowserGUI extends JFrame {
             }
         });
 
-        fileList.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    int selectedIndex = fileList.getSelectedIndex();
-                    if (selectedIndex != -1) {
-                        String selectedFile = listModel.getElementAt(selectedIndex);
-                        selectedFileLabel.setText(currentDirectory.getAbsolutePath() + File.separator + selectedFile);
-                    } else {
-                        selectedFileLabel.setText("");
-                    }
+        fileList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedIndex = fileList.getSelectedIndex();
+                if (selectedIndex != -1) {
+                    String selectedFile = listModel.getElementAt(selectedIndex);
+                    selectedFileLabel.setText(currentDirectory.getAbsolutePath() + File.separator + selectedFile);
+                } else {
+                    selectedFileLabel.setText("");
                 }
             }
         });
@@ -165,90 +172,80 @@ public class FileBrowserGUI extends JFrame {
         navigateToDirectory(new File(System.getProperty("user.home")));
         selectedFileLabel.setText(currentDirectory.getPath());
         setVisible(true);
-        connectButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    String pass = new String(textField3.getPassword());
-                    if(textField1.getText().equals("")||(textField4.getText()).equals("")){
-                        addConsoleText("Invalid Server Info Input");
-                    }else {
-                        if(FTPClientJ.connect(textField1.getText(), textField2.getText(), pass, Integer.parseInt(textField4.getText()))){
-                            addConsoleText("Connected!");
-                            connectButton.setEnabled(false);
-                            disconnectButton.setEnabled(true);
-                        }else{
-                            addConsoleText("Unable to Connect");
-                        }
-                    }
-                    } catch (IOException ex) {
-                    addConsoleText(ex.toString());
-                }
-            }
-        });
-
-        disconnectButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    FTPClientJ.disconnect();
-                    connectButton.setEnabled(true);
-                    disconnectButton.setEnabled(false);
-                    addConsoleText("Disconnected!");
-                } catch (IOException ex) {
-                    addConsoleText(ex.toString());
-                }
-            }
-        });
-
-        button1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setLoadingBar(0);
-                int selectedFileIndex = fileList.getSelectedIndex();
-                if(selectedFileIndex==-1){
-                    addConsoleText("No File Selected");
-                    return;
-                }
-                File[] files = currentDirectory.listFiles();
-                String selectedFile = listModel.getElementAt(selectedFileIndex);
-                File file = new File(currentDirectory, selectedFile);
-                if(file.isDirectory()&&selectedFileIndex!=0){
-                    //FTPClientJ.FTPUpFolder();
-                }else if(selectedFileIndex!=0){
-                    FTPClientJ.FTPUpFile(file.getAbsolutePath(), selectedFile);
+        connectButton.addActionListener(e -> {
+            try {
+                String pass = new String(textField3.getPassword());
+                if(textField1.getText().equals("")||(textField4.getText()).equals("")){
+                    addConsoleText("Invalid Server Info Input");
                 }else {
-
+                    if(FTPClientJ.connect(textField1.getText(), textField2.getText(), pass, Integer.parseInt(textField4.getText()))){
+                        addConsoleText("Connected!");
+                        connectButton.setEnabled(false);
+                        disconnectButton.setEnabled(true);
+                    }else{
+                        addConsoleText("Unable to Connect");
+                    }
                 }
-                if(!FTPClientJ.isConnected()){
-                    connectButton.setEnabled(true);
-                    disconnectButton.setEnabled(false);
-                    addConsoleText("Disconnected from "+ textField1.getText());
-                }
+                } catch (IOException ex) {
+                addConsoleText(ex.toString());
             }
         });
 
-        button2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ((DefaultListModel<String>) ftpDirectoryList.getModel()).clear();
-                File[] files = currentDirectory.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        if (file.isFile()) {
-                            ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName());
-                        }else {
-                            ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName()+ File.separator);
-                        }
+        disconnectButton.addActionListener(e -> {
+            try {
+                FTPClientJ.disconnect();
+                connectButton.setEnabled(true);
+                disconnectButton.setEnabled(false);
+                addConsoleText("Disconnected!");
+            } catch (IOException ex) {
+                addConsoleText(ex.toString());
+            }
+        });
+
+        button1.addActionListener(e -> {
+            setLoadingBar(0);
+            int selectedFileIndex = fileList.getSelectedIndex();
+            if(selectedFileIndex==-1){
+                addConsoleText("No File Selected");
+                return;
+            }
+            File[] files = currentDirectory.listFiles();
+            String selectedFile = listModel.getElementAt(selectedFileIndex);
+            File file = new File(currentDirectory, selectedFile);
+            if(file.isDirectory()&&selectedFileIndex!=0){
+                //FTPClientJ.FTPUpFolder();
+            }else if(selectedFileIndex!=0){
+                FTPClientJ.FTPUpFile(file.getAbsolutePath(), selectedFile);
+            }else {
+
+            }
+            if(!FTPClientJ.isConnected()){
+                connectButton.setEnabled(true);
+                disconnectButton.setEnabled(false);
+                addConsoleText("Disconnected from "+ textField1.getText());
+            }
+        });
+
+        button2.addActionListener(e -> {
+            ((DefaultListModel<String>) ftpDirectoryList.getModel()).clear();
+            File[] files = currentDirectory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile()) {
+                        ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName());
+                    }else {
+                        ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName()+ File.separator);
                     }
                 }
             }
         });
 
-        button3.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-              System.out.println(FTPClientJ.isConnected());
+        button3.addActionListener(e -> {
+            try {
+                ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement("..");
+                updateFTPFileList(FTPClientJ.getDir());
+            } catch (IOException ex) {
+                addConsoleText(ex.toString());
             }
         });
     }
@@ -265,6 +262,23 @@ public class FileBrowserGUI extends JFrame {
             }
         }
     }
+    private void updateFTPFileList(FTPFile[] files) {
+        ((DefaultListModel<String>) ftpDirectoryList.getModel()).clear();
+        if (ftpDirectoryList.getParent() != null) {
+            FTPListModel.addElement("..");
+        }
+
+        if (files != null) {
+            for (FTPFile file : files) {
+                if (file.isDirectory()) {
+                    ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName() + File.separator);
+                } else {
+                    ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName());
+                }
+            }
+        }
+    }
+
 
     private void updateFileList(File directory) {
         listModel.clear();

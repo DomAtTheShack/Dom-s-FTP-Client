@@ -1,5 +1,6 @@
 import org.apache.commons.net.PrintCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTP;
 
@@ -33,8 +34,7 @@ public class FTPClientJ {
             }
 
             // Add protocol command listener to print out the commands and responses
-            StringWriter stringWriter = new StringWriter();
-            PrintWriter commandWriter = new PrintWriter(stringWriter);
+            PrintWriter commandWriter = new PrintWriter(System.out);
 
             // Add protocol command listener to the custom PrintWriter
             ftpClient.addProtocolCommandListener(new PrintCommandListener(commandWriter, true));
@@ -247,4 +247,13 @@ public class FTPClientJ {
 
             return size;
         }
+
+    public static FTPFile[] getDir() throws IOException {
+        try {
+            return ftpClient.listFiles();
+        } catch (Exception e) {
+            Main.gui.addConsoleText(e.toString());
+            return null;
+        }
+    }
 }
