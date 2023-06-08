@@ -15,12 +15,12 @@ public class FileBrowserGUI extends JFrame {
     private JList<String> fileList;
     private DefaultListModel<String> listModel;
     private JLabel selectedFileLabel;
-    private JProgressBar loadingBar;
+    public JProgressBar loadingBar;
     private JTextField textField1;
     private JTextField textField2;
     private JPasswordField textField3;
     private JTextField textField4;
-    private JTextArea console;
+    public JTextArea console;
 
     private File currentDirectory;
 
@@ -292,5 +292,8 @@ public class FileBrowserGUI extends JFrame {
     }
     public void addConsoleText(String text) {
         console.append(text + "\n");
+    }
+    public void appendTextToConsole(String text) {
+        addConsoleText(text);
     }
 }
