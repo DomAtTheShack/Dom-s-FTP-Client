@@ -5,6 +5,7 @@
       <element id="module-output" name="Dom-s-FTP-Client" />
       <element id="library" level="project" name="commons-net-3.9.0" />
       <element id="extracted-dir" path="$PROJECT_DIR$/src/JarLibs/commons-net-3.9.0.jar" path-in-jar="/" />
+      <element id="library" level="project" name="commons-net-3.9.0 (2)" />
     </root>
   </artifact>
 </component>
