@@ -1,11 +1,15 @@
-
 import javax.swing.*;
+import java.io.IOException;
 
 public class Main {
     public static FileBrowserGUI gui;
 
     static {
-        gui = new FileBrowserGUI();
+        try {
+            gui = new FileBrowserGUI();
+        } catch (IOException e) {
+            gui.addConsoleText(e.toString());
+        }
     }
 
     public static void main(String[] args){

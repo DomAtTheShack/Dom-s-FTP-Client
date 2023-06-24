@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.io.*;
 
 public class FTPClientJ {
-    private static FTPClient ftpClient = new FTPClient();
+    public static FTPClient ftpClient = new FTPClient();
     private static SwingWorker<Boolean, Integer> uploadTask;
 
 
@@ -248,12 +248,30 @@ public class FTPClientJ {
             return size;
         }
 
-    public static FTPFile[] getDir() throws IOException {
+    public static FTPFile[] getList() throws IOException {
         try {
+            ftpClient.setFileType(FTP.ASCII_FILE_TYPE);
             return ftpClient.listFiles();
         } catch (Exception e) {
             Main.gui.addConsoleText(e.toString());
             return null;
         }
+    }
+    public static FTPFile[] getDir() throws IOException {
+        try {
+            ftpClient.setFileType(FTP.ASCII_FILE_TYPE);
+            return ftpClient.mlistDir();
+        } catch (Exception e) {
+            Main.gui.addConsoleText(e.toString());
+            return null;
+        }
+    }
+
+    public static String getWorkingDir() throws IOException {
+        return ftpClient.printWorkingDirectory();
+    }
+
+    public static void changeDir(File directory) throws IOException {
+        ftpClient.changeWorkingDirectory(directory.getAbsolutePath());
     }
 }

@@ -29,10 +29,10 @@ public class FileBrowserGUI extends JFrame {
 
     private DefaultListModel<String> FTPListModel;
 
-
+    private File FTPcurrentDirectory;
     private File currentDirectory;
 
-    public FileBrowserGUI() {
+    public FileBrowserGUI() throws IOException {
         setTitle("FTP Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
@@ -147,10 +147,47 @@ public class FileBrowserGUI extends JFrame {
                         if (selectedFile.equals("..")) {
                             File parentDirectory = currentDirectory.getParentFile();
                             if (parentDirectory != null) {
-                                navigateToDirectory(parentDirectory);
+                                try {
+                                    navigateToDirectory(parentDirectory);
+                                } catch (IOException ex) {
+                                    addConsoleText(ex.toString());
+                                }
                             }
                         } else if (file.isDirectory()) {
-                            navigateToDirectory(file);
+                            try {
+                                navigateToDirectory(file);
+                            } catch (IOException ex) {
+                                addConsoleText(ex.toString());
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        ftpDirectoryList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e){
+                if (e.getClickCount() == 2) {
+                    int selectedIndex = ftpDirectoryList.getSelectedIndex();
+                    if (selectedIndex != -1) {
+                        String selectedFile = FTPListModel.getElementAt(selectedIndex);
+                        File file = new File(FTPcurrentDirectory, selectedFile);
+                        if (selectedFile.equals("..")) {
+                            File parentDirectory = FTPcurrentDirectory.getParentFile();
+                            if (parentDirectory != null) {
+                                try {
+                                    navigateToFTPDirectory(parentDirectory);
+                                } catch (IOException ex) {
+                                    addConsoleText(ex.toString());
+                                }
+                            }
+                        } else if (file.isDirectory()) {
+                            try {
+                                navigateToFTPDirectory(file);
+                            } catch (IOException ex) {
+                                addConsoleText(ex.toString());
+                            }
                         }
                     }
                 }
@@ -182,6 +219,13 @@ public class FileBrowserGUI extends JFrame {
                         addConsoleText("Connected!");
                         connectButton.setEnabled(false);
                         disconnectButton.setEnabled(true);
+                        FTPFile[] curDir = FTPClientJ.getList();
+                        if(curDir[0]==null) {
+                            updateFTPFileList(FTPClientJ.getDir());
+                        }else{
+                            updateFTPFileList(curDir);
+                        }
+                        FTPcurrentDirectory = new File(FTPClientJ.getWorkingDir());
                     }else{
                         addConsoleText("Unable to Connect");
                     }
@@ -196,6 +240,7 @@ public class FileBrowserGUI extends JFrame {
                 FTPClientJ.disconnect();
                 connectButton.setEnabled(true);
                 disconnectButton.setEnabled(false);
+                ((DefaultListModel<String>) ftpDirectoryList.getModel()).clear();
                 addConsoleText("Disconnected!");
             } catch (IOException ex) {
                 addConsoleText(ex.toString());
@@ -242,7 +287,6 @@ public class FileBrowserGUI extends JFrame {
 
         button3.addActionListener(e -> {
             try {
-                ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement("..");
                 updateFTPFileList(FTPClientJ.getDir());
             } catch (IOException ex) {
                 addConsoleText(ex.toString());
@@ -250,50 +294,85 @@ public class FileBrowserGUI extends JFrame {
         });
     }
 
-    private void navigateToDirectory(File directory) {
-        if (directory != null) {
-            updateFileList(directory);
-            currentDirectory = directory;
+    private void navigateToDirectory(File directory) throws IOException {
+        try {
+            if (directory != null) {
+                updateFileList(directory);
+                currentDirectory = directory;
 
-            if (currentDirectory.getParentFile() != null) {
-                selectedFileLabel.setText(currentDirectory.getAbsolutePath());
-            } else {
-                selectedFileLabel.setText("");
+                if (currentDirectory.getParentFile() != null) {
+                    selectedFileLabel.setText(currentDirectory.getAbsolutePath());
+                } else {
+                    selectedFileLabel.setText("");
+                }
+            }
+        }catch (Exception e){
+            addConsoleText(e.toString());
+        }
+    }
+    private void navigateToFTPDirectory(File directory) throws IOException {
+        try {
+            if (directory != null) {
+                FTPClientJ.changeDir(directory);
+                FTPFile[] curDir = FTPClientJ.getDir();
+                if(curDir[0]==null) {
+                    updateFTPFileList(FTPClientJ.getList());
+                }else {
+                    updateFTPFileList(curDir);
+                }
+                FTPcurrentDirectory = directory;
+
+                if (FTPcurrentDirectory.getParentFile() != null) {
+                  //  selectedFileLabel.setText(currentDirectory.getAbsolutePath());
+                } else {
+                  //  selectedFileLabel.setText("");
+                }
+            }
+        }catch (Exception e){
+            addConsoleText(e.toString());
+        }
+    }
+    private void updateFTPFileList(FTPFile[] files) throws IOException {
+        if(FTPClientJ.ftpClient.isConnected()) {
+            try {
+                ((DefaultListModel<String>) ftpDirectoryList.getModel()).clear();
+                if (ftpDirectoryList.getParent() != null && !"/".equals(FTPClientJ.ftpClient.printWorkingDirectory())) {
+                    ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement("..");
+                }
+                if (files != null) {
+                    for (FTPFile file : files) {
+                        if (file.isDirectory()) {
+                            ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName() + File.separator);
+                        } else {
+                            ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName());
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                addConsoleText(ex.toString());
             }
         }
     }
-    private void updateFTPFileList(FTPFile[] files) {
-        ((DefaultListModel<String>) ftpDirectoryList.getModel()).clear();
-        if (ftpDirectoryList.getParent() != null) {
-            FTPListModel.addElement("..");
-        }
 
-        if (files != null) {
-            for (FTPFile file : files) {
-                if (file.isDirectory()) {
-                    ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName() + File.separator);
-                } else {
-                    ((DefaultListModel<String>) ftpDirectoryList.getModel()).addElement(file.getName());
+
+    private void updateFileList(File directory) throws IOException {
+        try {
+            listModel.clear();
+            if (directory.getParentFile() != null && "/".equals(FTPClientJ.ftpClient.printWorkingDirectory())) {
+                listModel.addElement("..");
+            }
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        listModel.addElement(file.getName() + File.separator);
+                    } else {
+                        listModel.addElement(file.getName());
+                    }
                 }
             }
-        }
-    }
-
-
-    private void updateFileList(File directory) {
-        listModel.clear();
-        if (directory.getParentFile() != null) {
-            listModel.addElement("..");
-        }
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    listModel.addElement(file.getName() + File.separator);
-                } else {
-                    listModel.addElement(file.getName());
-                }
-            }
+        }catch(Exception e){
+            addConsoleText(e.toString());
         }
     }
 
