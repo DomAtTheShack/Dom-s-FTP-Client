@@ -1,5 +1,6 @@
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -219,13 +220,11 @@ public class FileBrowserGUI extends JFrame {
                         addConsoleText("Connected!");
                         connectButton.setEnabled(false);
                         disconnectButton.setEnabled(true);
-                        FTPFile[] curDir = FTPClientJ.getList();
-                        if(curDir[0]==null) {
-                            updateFTPFileList(FTPClientJ.getDir());
-                        }else{
-                            updateFTPFileList(curDir);
-                        }
-                        FTPcurrentDirectory = new File(FTPClientJ.getWorkingDir());
+                            updateFTPFileList(FTPClientJ.getList());
+                            if(FTPClientJ.getReply()==500){
+                                updateFTPFileList(FTPClientJ.getDir());
+                            }
+                            FTPcurrentDirectory = new File(FTPClientJ.getWorkingDir());
                     }else{
                         addConsoleText("Unable to Connect");
                     }
@@ -287,7 +286,7 @@ public class FileBrowserGUI extends JFrame {
 
         button3.addActionListener(e -> {
             try {
-                updateFTPFileList(FTPClientJ.getDir());
+                    navigateToFTPDirectory(new File("/dominichann"));
             } catch (IOException ex) {
                 addConsoleText(ex.toString());
             }
@@ -315,7 +314,7 @@ public class FileBrowserGUI extends JFrame {
             if (directory != null) {
                 FTPClientJ.changeDir(directory);
                 FTPFile[] curDir = FTPClientJ.getDir();
-                if(curDir[0]==null) {
+                if(curDir==null) {
                     updateFTPFileList(FTPClientJ.getList());
                 }else {
                     updateFTPFileList(curDir);
@@ -358,7 +357,7 @@ public class FileBrowserGUI extends JFrame {
     private void updateFileList(File directory) throws IOException {
         try {
             listModel.clear();
-            if (directory.getParentFile() != null && "/".equals(FTPClientJ.ftpClient.printWorkingDirectory())) {
+            if (directory.getParentFile() != null ) {
                 listModel.addElement("..");
             }
             File[] files = directory.listFiles();

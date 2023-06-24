@@ -274,4 +274,8 @@ public class FTPClientJ {
     public static void changeDir(File directory) throws IOException {
         ftpClient.changeWorkingDirectory(directory.getAbsolutePath());
     }
+
+    public static int getReply() throws IOException {
+        return ftpClient.getReply();
+    }
 }
